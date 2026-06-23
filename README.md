@@ -1,1 +1,1 @@
-# stroop_PC_10min
+# stroop_PC_9min30sec
