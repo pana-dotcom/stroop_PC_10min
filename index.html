@@ -18,12 +18,10 @@ button {
   margin: 5px;
 }
 
-/* ✅ キー対応表 */
 #keymap {
   margin-top: 40px;
 }
 
-/* ✅ 四角ボックス */
 .keybox {
   display: inline-block;
   width: 80px;
@@ -35,7 +33,6 @@ button {
   border: 3px solid #333;
   border-radius: 10px;
 }
-
 </style>
 </head>
 <body>
@@ -50,7 +47,6 @@ button {
   </div>
 </div>
 
-<!-- ✅ キー対応表示（文字のみ） -->
 <div id="keymap">
   <div class="keybox" style="color:red;">D</div>
   <div class="keybox" style="color:blue;">F</div>
@@ -65,13 +61,13 @@ const keyMap = {
   "d": "red",
   "f": "blue",
   "j": "green",
-  "k": "yellow"
+  "k": "gold"  // ✅ 修正済み（重要）
 };
 
 let current;
 let startTime;
-let isWaiting = false;
 let isRunning = false;
+let canRespond = false;
 
 let trialCount = 0;
 let csvLog = [];
@@ -87,18 +83,33 @@ document.getElementById("startBtn").addEventListener("click", () => {
 
   trialCount = 0;
   csvLog = [];
-
   isRunning = true;
 
-  nextQuestion();
+  showFixation(); // ✅ ✖から開始
 
   setTimeout(() => {
     endTest();
   }, timeLimit);
 });
 
-// ✅ 試行生成
-function nextQuestion() {
+// ✅ 注視点（500ms）
+function showFixation() {
+  if (!isRunning) return;
+
+  const wordDiv = document.getElementById("word");
+  wordDiv.textContent = "✖";
+  wordDiv.style.color = "black";
+
+  canRespond = false;
+
+  setTimeout(() => {
+    showStimulus();
+  }, 500);
+}
+
+// ✅ 刺激提示（2000ms）
+function showStimulus() {
+  if (!isRunning) return;
 
   const rand = Math.random();
   let condition;
@@ -114,7 +125,7 @@ function nextQuestion() {
   let text, color;
 
   if (condition === 1) {
-    const i = Math.floor(Math.random() * texts.length);
+    let i = Math.floor(Math.random() * texts.length);
     text = texts[i];
     color = colors[i];
 
@@ -136,16 +147,27 @@ function nextQuestion() {
   current = { text, color, condition };
 
   const wordDiv = document.getElementById("word");
+  wordDiv.textContent = text;
+  wordDiv.style.color = color;
 
-  isWaiting = true;
+  startTime = performance.now();
+  canRespond = true;
 
-  requestAnimationFrame(() => {
-    wordDiv.textContent = current.text;
-    wordDiv.style.color = current.color;
+  // ✅ 2000ms後に自動で次の✖へ
+  setTimeout(() => {
 
-    startTime = performance.now();
-    isWaiting = false;
-  });
+    // 無反応でも記録
+    trialCount++;
+    csvLog.push([
+      trialCount,
+      current.condition,
+      "",
+      0
+    ]);
+
+    showFixation();
+
+  }, 2000);
 }
 
 // ✅ キー入力
@@ -157,7 +179,7 @@ document.addEventListener("keydown", (e) => {
 
 // ✅ 回答処理
 function handleAnswer(ans) {
-  if (!isRunning || isWaiting) return;
+  if (!isRunning || !canRespond) return;
 
   const rt = Math.round(performance.now() - startTime);
   const correct = (ans === current.color) ? 1 : 0;
@@ -171,16 +193,18 @@ function handleAnswer(ans) {
     correct
   ]);
 
-  nextQuestion();
+  canRespond = false;
+
+  showFixation(); // ✅ 回答後すぐ✖へ
 }
 
-// ✅ 終了（修正ポイントあり）
+// ✅ 終了
 function endTest() {
   isRunning = false;
 
   const wordDiv = document.getElementById("word");
   wordDiv.textContent = "終了！";
-  wordDiv.style.color = "black"; // ✅ ここで黒にする
+  wordDiv.style.color = "black";
 
   let csv = "試行回数,条件,反応時間(ms),正誤\n";
   csvLog.forEach(row => {
@@ -203,7 +227,6 @@ function endTest() {
   link.download = "stroop_" + fileName + ".csv";
   link.click();
 }
-
 </script>
 
 </body>
