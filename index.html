@@ -1,7 +1,9 @@
-<!DOCTYPE html><ja">
+<!DOCTYPE html>
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <title>Stroop test</title>
+
 <style>
 body {
   font-family: sans-serif;
@@ -104,9 +106,7 @@ let stimulusTimer;
 // ✅ スタート
 document.getElementById("startBtn").addEventListener("click", () => {
 
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen();
-  }
+  // ✅ フルスクリーン削除済み
 
   document.getElementById("word").classList.remove("start");
   document.getElementById("guide").style.display = "none";
@@ -166,21 +166,16 @@ function showStimulus() {
 
   const wordDiv = document.getElementById("word");
 
-  // ✅ 描画と完全同期
   requestAnimationFrame(() => {
-
     wordDiv.textContent = text;
     wordDiv.style.color = color;
 
-    startTime = performance.now();  // ✅ ここが正確
+    startTime = performance.now();
     canRespond = true;
     answered = false;
-
   });
 
-  // ✅ 2000ms固定
   stimulusTimer = setTimeout(() => {
-
     if (!answered) {
       trialCount++;
       csvLog.push([trialCount, current.condition, "", 0]);
@@ -193,7 +188,6 @@ function showStimulus() {
 
 // ✅ キー入力
 document.addEventListener("keydown", (e) => {
-
   if (!isRunning || !canRespond || answered) return;
 
   const key = e.key.toLowerCase();
